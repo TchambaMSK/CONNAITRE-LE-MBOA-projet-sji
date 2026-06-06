@@ -1,3 +1,6 @@
+{% extends 'mboaquizapp/base.html' %}
+
+{% block content %}
 <h1>Choose your difficulty</h1>
 <ul>
     <li><a href="{% url 'start_quiz' 'easy' %}">Easy</a></li>
@@ -5,3 +8,4 @@
     <li><a href="{% url 'start_quiz' 'hard' %}">Hard</a></li>
 </ul>
 <a href="{% url 'home' %}">Back</a>
+{% endblock %}

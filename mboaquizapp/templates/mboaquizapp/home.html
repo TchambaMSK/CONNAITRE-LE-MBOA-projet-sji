@@ -1,7 +1,11 @@
-<h1>Welcome, {{ user.username }}</h1>
-<ul>
-    <li><a href="{% url 'rules' %}">Rules</a></li>
-    <li><a href="{% url 'select_difficulty' %}">Play</a></li>
-    <li><a href="{% url 'show_score' %}">My Score</a></li>
-    <li><a href="{% url 'logout' %}">Exit</a></li>
-</ul>
+{% extends 'mboaquizapp/base.html' %}
+
+{% block content %}
+    <p>Welcome, {{ user.username }}</p>
+    <div class="menu-buttons">
+        <a href="{% url 'select_difficulty' %}" class="btn">PLAY</a>
+        <a href="{% url 'rules' %}" class="btn">RULES</a>
+        <a href="{% url 'account_select' %}" class="btn">ACCOUNTS</a>
+        <a href="{% url 'logout' %}" class="btn">QUIT</a>
+    </div>
+{% endblock %}

@@ -26,8 +26,26 @@ def rules(request):
 
 # The ACCOUNT SELECTION PAGE from here
 def account_select(request):
-    return render(request, 'mboaquizapp/account_select.html')
-
+    if request.user.is_authenticated:
+        # Show account details (score, badges, etc.)
+        user_score, _ = UserScore.objects.get_or_create(user=request.user)
+        earned_badges = UserBadge.objects.filter(user=request.user).select_related('badge')
+        earned_standard_badges = UserStandardBadge.objects.filter(user=request.user).select_related('standard_badge')
+        context = {
+            'user': request.user,
+            'total_score': user_score.total_score,
+            'completed_easy': user_score.completed_easy,
+            'completed_medium': user_score.completed_medium,
+            'completed_hard': user_score.completed_hard,
+            'earned_badges': earned_badges,
+            'earned_standard_badges': earned_standard_badges,
+        }
+        return render(request, 'mboaquizapp/account_detail.html', context)
+    else:
+        # Show login/register options
+        users = User.objects.all()  # List existing usernames
+        return render(request, 'mboaquizapp/account_login_register.html', {'users': users})
+    
 def create_account(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -132,7 +150,7 @@ def get_question(request):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse(data)
     else: 
-        return render(request, 'mboaquizapp/question.html', {'question_data': data})
+        return render(request, 'mboaquizapp/play_quiz.html', {'question_data': data})
 # The end of get question and handle answer submission
 
 # Answer submission and validation

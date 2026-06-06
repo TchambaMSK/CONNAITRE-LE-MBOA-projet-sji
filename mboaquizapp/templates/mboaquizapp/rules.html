@@ -1,4 +1,19 @@
-<h1>Game Rules</h1>
-<p>Choose a difficulty. Each correct answer gives 1 point. Complete all levels to become champion.</p>
-<p>Badges are automatically unlocked based on your total score.</p>
-<a href="{% url 'home' %}">Back</a>
+{% extends 'mboaquizapp/base.html' %}
+
+{% block content %}
+    <h2>Game Rules</h2>
+    <div class="rules-content">
+        <ul>
+            <li>Choose a difficulty: Easy, Medium, or Hard.</li>
+            <li>Each question has a time limit (30 seconds by default).</li>
+            <li>Answer correctly to earn 1 point.</li>
+            <li>After answering, you'll see immediate feedback and explanation.</li>
+            <li>Complete all questions in a level to unlock the next difficulty.</li>
+            <li>Badges are awarded automatically based on your total score.</li>
+            <li>You can view your score and badges in the <strong>ACCOUNTS</strong> section.</li>
+        </ul>
+    </div>
+    <div class="menu-buttons">
+        <a href="{% url 'home' %}" class="btn">Back to Menu</a>
+    </div>
+{% endblock %}

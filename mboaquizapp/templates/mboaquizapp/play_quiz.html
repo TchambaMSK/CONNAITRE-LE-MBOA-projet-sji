@@ -1,0 +1,161 @@
+{% extends 'mboaquizapp/base.html' %}
+
+{% block content %}
+<div class="quiz-container">
+    <h2 id="question-counter">Question <span id="current-q">0</span>/<span id="total-q">0</span></h2>
+    <p id="score-display">Score: <span id="score-value">0</span></p>
+    <div class="progress-container">
+        <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div id="timer" class="timer">Time: <span id="time-left">0</span> sec</div>
+    <div id="question-text"></div>
+    <form id="quiz-form">
+        <div id="options-container"></div>
+        <button type="submit" class="btn" id="submit-btn">Submit</button>
+    </form>
+    <div id="feedback" style="display: none;"></div>
+</div>
+
+<script>
+    let currentQuestionId = null;
+    let currentScore = 0;
+    let totalQuestions = 0;
+    let currentIndex = 0;
+    let timeLimit = 0;
+    let timerInterval = null;
+    let startTime = null;
+    let answered = false;
+
+    function fetchQuestion() {
+        fetch('/quiz/question/', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                // Probably no more questions or error
+                window.location.href = '/quiz/level-complete/';
+                return;
+            }
+            currentQuestionId = data.id;
+            totalQuestions = data.total_questions;
+            currentIndex = data.current_question;
+            timeLimit = data.time_limit;
+            document.getElementById('current-q').innerText = currentIndex;
+            document.getElementById('total-q').innerText = totalQuestions;
+            document.getElementById('score-value').innerText = currentScore;
+            document.getElementById('question-text').innerHTML = `<p>${data.text}</p>`;
+            if (data.image_url) {
+                document.getElementById('question-text').innerHTML += `<img src="${data.image_url}" style="max-width:100%;">`;
+            }
+            const optionsDiv = document.getElementById('options-container');
+            optionsDiv.innerHTML = '';
+            for (let i = 1; i <= 4; i++) {
+                const optionLabel = document.createElement('label');
+                optionLabel.innerHTML = `<input type="radio" name="answer" value="${i}"> ${data['option'+i]}`;
+                optionsDiv.appendChild(optionLabel);
+                optionsDiv.appendChild(document.createElement('br'));
+            }
+            // Reset timer
+            if (timerInterval) clearInterval(timerInterval);
+            startTime = Date.now();
+            let remaining = timeLimit;
+            const timeSpan = document.getElementById('time-left');
+            timeSpan.innerText = remaining;
+            timerInterval = setInterval(() => {
+                if (!answered) {
+                    remaining--;
+                    timeSpan.innerText = remaining;
+                    if (remaining <= 0) {
+                        clearInterval(timerInterval);
+                        alert('Time is up!');
+                        document.getElementById('submit-btn').click();
+                    }
+                }
+            }, 1000);
+            answered = false;
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('submit-btn').disabled = false;
+        });
+    }
+
+    document.getElementById('quiz-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (answered) return;
+        const selected = document.querySelector('input[name="answer"]:checked');
+        if (!selected) {
+            alert('Please select an answer');
+            return;
+        }
+        const answerValue = selected.value;
+        const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+        clearInterval(timerInterval);
+        answered = true;
+        document.getElementById('submit-btn').disabled = true;
+
+        fetch('/quiz/submit/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                question_id: currentQuestionId,
+                selected_option: answerValue,
+                time_taken: timeTaken
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            currentScore = data.score;
+            document.getElementById('score-value').innerText = currentScore;
+            const feedbackDiv = document.getElementById('feedback');
+            const isCorrect = data.is_correct;
+            feedbackDiv.style.display = 'block';
+            feedbackDiv.innerHTML = `
+                <h3>${isCorrect ? 'Correct!' : 'Wrong!'}</h3>
+                <p>Your answer: ${document.querySelector('input[name="answer"]:checked').parentElement.textContent}</p>
+                <p>Correct answer: Option ${data.correct_option}</p>
+                <p>${data.explanation}</p>
+                <button class="btn" id="next-btn">Next Question</button>
+            `;
+            document.getElementById('next-btn').addEventListener('click', () => {
+                if (data.next_question) {
+                    fetchQuestion();
+                } else {
+                    window.location.href = '/quiz/level-complete/';
+                }
+            });
+        });
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Start the quiz
+    fetchQuestion();
+</script>
+
+<style>
+    .quiz-container { max-width: 800px; margin: auto; padding: 20px; }
+    .timer { font-size: 24px; font-weight: bold; color: red; margin-bottom: 20px; }
+    .progress-container { width: 100%; background: #ddd; border-radius: 10px; margin-bottom: 20px; }
+    .progress-fill { width: 0%; height: 20px; background: #006400; border-radius: 10px; transition: width 0.3s; }
+    #options-container label { display: block; margin: 10px; }
+    #feedback { margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 8px; }
+</style>
+
+{% endblock %}
