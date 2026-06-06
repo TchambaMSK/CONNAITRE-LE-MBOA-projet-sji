@@ -1,0 +1,12 @@
+<h1>Question {{ question_data.current_question }}/{{ question_data.total_questions }}</h1>
+<p>{{ question_data.text }}</p>
+<form method="post" action="{% url 'submit_answer' %}">
+    {% csrf_token %}
+    <input type="hidden" name="question_id" value="{{ question_data.id }}">
+    <label><input type="radio" name="selected_option" value="1"> {{ question_data.option1 }}</label><br>
+    <label><input type="radio" name="selected_option" value="2"> {{ question_data.option2 }}</label><br>
+    <label><input type="radio" name="selected_option" value="3"> {{ question_data.option3 }}</label><br>
+    <label><input type="radio" name="selected_option" value="4"> {{ question_data.option4 }}</label><br>
+    <button type="submit">Answer</button>
+</form>
+<p>Time limit: {{ question_data.time_limit }} seconds (frontend must implement timer)</p>

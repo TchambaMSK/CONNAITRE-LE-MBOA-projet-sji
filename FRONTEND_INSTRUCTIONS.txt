@@ -1,0 +1,104 @@
+========================================
+CONNAITRE LE MBOA - QUIZ WEBSITE
+BACKEND API & INTEGRATION NOTES
+========================================
+
+1. OVERVIEW
+- Django serves JSON endpoints (for AJAX) or plain HTML (fallback).
+- Your frontend should use JavaScript (fetch/axios) to interact with the backend.
+- All responses include necessary data (question, options, time limit, etc.)
+
+2. ACCOUNT SYSTEM (No passwords)
+- Endpoint: POST /accounts/create/
+  Body: username=NEW_USERNAME
+  Response: redirects to home (or you can use fetch and handle redirect)
+- Endpoint: POST /accounts/login/
+  Body: username=EXISTING_USERNAME
+- Endpoint: GET /logout/
+
+3. QUIZ FLOW (AJAX recommended)
+
+3.1 Start quiz (choose difficulty)
+- GET /quiz/start/<difficulty>/   (difficulty = easy, medium, hard)
+- This initializes session and redirects to /quiz/question/
+
+3.2 Get current question
+- GET /quiz/question/
+- Send header: X-Requested-With: XMLHttpRequest
+- Response (JSON):
+{
+  "id": 5,
+  "text": "What is the capital of Cameroon?",
+  "option1": "Douala",
+  "option2": "Yaoundé",
+  "option3": "Garoua",
+  "option4": "Bamenda",
+  "time_limit": 30,
+  "image_url": "/media/quiz_images/yaounde.jpg" or null,
+  "difficulty": "easy",
+  "current_question": 1,
+  "total_questions": 30
+}
+
+3.3 Submit answer
+- POST /quiz/submit/
+- Content-Type: application/json
+- Body (JSON):
+{
+  "question_id": 5,
+  "selected_option": "2",   // "1", "2", "3", "4"
+  "time_taken": 12          // seconds user took to answer
+}
+- Response (JSON):
+{
+  "is_correct": true,
+  "correct_option": 2,
+  "explanation": "Yaoundé is the political capital since 1922.",
+  "score": 7,               // current score in this level
+  "next_question": true     // false if level finished
+}
+
+If next_question = false, redirect to /quiz/level-complete/
+
+3.4 Level complete
+- GET /quiz/level-complete/
+- Returns HTML (or you can fetch and parse)
+- Displays score for that level, total score, unlocked badges.
+
+3.5 Overall score
+- GET /quiz/score/
+- Returns total score and completed levels.
+
+4. TEMPLATES (simple examples provided)
+- The designer must replace the placeholder templates (home.html, question.html, etc.) with their own HTML/CSS.
+- Keep the same template names and block structure, or rewrite views to return JSON only (recommended for full frontend separation).
+
+5. STATIC FILES & MEDIA
+- CSS/JS/Images go in /static/ (create folder)
+- User-uploaded images (questions, badges) go in /media/ (already configured)
+
+6. CSRF TOKEN
+- For POST requests, include CSRF token. In JavaScript:
+  const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+  or fetch with credentials: 'same-origin' and set header: "X-CSRFToken": csrftoken
+
+7. TESTING NOTES
+- Admin panel: /admin (login with superuser created earlier)
+- Add questions, badges, standard badges via admin panel before playing.
+
+8. EXAMPLE FETCH FOR QUESTION (Vanilla JS)
+fetch('/quiz/question/', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+  .then(r => r.json())
+  .then(data => { /* display question, options, start timer */ });
+
+9. SUBMIT ANSWER EXAMPLE
+fetch('/quiz/submit/', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+  body: JSON.stringify({ question_id: 5, selected_option: "2", time_taken: 15 })
+})
+.then(r => r.json())
+.then(data => { /* show feedback, load next question */ });
+
+========================================
+CONTACT: stevekarelltchamba@gmail.com or steve.tchamba@saintjeaningenieur.org for backend adjustments

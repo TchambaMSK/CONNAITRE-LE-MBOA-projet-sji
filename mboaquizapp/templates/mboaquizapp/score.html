@@ -1,0 +1,7 @@
+<h1>Your total score: {{ total_score }}</h1>
+<p>Completed levels: 
+    {% if completed_easy %}Easy yes {% endif %}
+    {% if completed_medium %}Medium yes {% endif %}
+    {% if completed_hard %}Hard yes {% endif %}
+</p>
+<a href="{% url 'home' %}">Back</a>

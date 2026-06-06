@@ -1,0 +1,5 @@
+<h1>Level {{ difficulty }} completed!</h1>
+<p>Your score: {{ user_score }}/{{ total_questions }} ({{ percentage|floatformat:0 }}%)</p>
+<p>Total score: {{ total_score }}</p>
+{% if unlocked_badges %}<p>New badges: {{ unlocked_badges|join:", " }}</p>{% endif %}
+<a href="{% url 'select_difficulty' %}">Choose another level</a> | <a href="{% url 'home' %}">Main menu</a>

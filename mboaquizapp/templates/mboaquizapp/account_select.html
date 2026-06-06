@@ -1,0 +1,12 @@
+<h1>Account</h1>
+<form method="post" action="{% url 'create_account' %}">
+    {% csrf_token %}
+    <input name="username" placeholder="New user" required>
+    <button type="submit">Create Account</button>
+</form>
+<form method="post" action="{% url 'login_account' %}">
+    {% csrf_token %}
+    <input name="username" placeholder="Existing user" required>
+    <button type="submit">Login</button>
+</form>
+{% if messages %}{% for message in messages %}<p>{{ message }}</p>{% endfor %}{% endif %}

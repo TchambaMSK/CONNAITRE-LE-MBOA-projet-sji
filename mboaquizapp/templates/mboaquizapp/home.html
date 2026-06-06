@@ -1,0 +1,7 @@
+<h1>Welcome, {{ user.username }}</h1>
+<ul>
+    <li><a href="{% url 'rules' %}">Rules</a></li>
+    <li><a href="{% url 'select_difficulty' %}">Play</a></li>
+    <li><a href="{% url 'show_score' %}">My Score</a></li>
+    <li><a href="{% url 'logout' %}">Exit</a></li>
+</ul>
